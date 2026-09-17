@@ -8,7 +8,7 @@
 
 **Cenário utilizado:** **Não dê nem água** — monitoramento e irrigação de plantas em ambiente doméstico, conforme a Atividade 01. Sensores conectados a um ESP32 por vaso enviam eventos por Wi-Fi/MQTT a um backend em nuvem. O backend utiliza parâmetros por espécie, controla a bomba por uma tomada inteligente integrada via API e envia notificações ao aplicativo e à Alexa.
 
-**Hipótese de arquitetura desta atividade:** a tomada depende da nuvem do fabricante. Sem acesso ao backend ou às APIs, a irrigação automática fica suspensa. Não há regra de irrigação de emergência local nesta proposta. Os intervalos e limites abaixo são parâmetros iniciais de modelagem, sujeitos a calibração no projeto; não constituem recomendações universais de cultivo.
+**Arquitetura proposta:** a tomada depende da nuvem do fabricante. Sem acesso ao backend ou às APIs, a irrigação automática fica suspensa. Não há regra de irrigação de emergência local nesta proposta. Os intervalos e limites são parâmetros iniciais do projeto e devem ser calibrados conforme a espécie, o substrato e os sensores utilizados.
 
 ---
 
@@ -39,7 +39,7 @@ São ocorrências distintas, mesmo quando produzidas pelo mesmo ESP32. A primeir
 | `LeituraUmidadeSolo` | ESP32 lendo o higrômetro capacitivo; substrato do `vaso_id` | `umidade_solo_pct`: índice de umidade calibrado entre referências seca e úmida, em %; `tensao_bruta_mv`: leitura bruta em mV |
 | `LeituraAmbiente` | ESP32 lendo DHT22 e BH1750; microclima do `vaso_id` | `temperatura_c`: °C; `umidade_ar_pct`: %; `luminosidade_lux`: lux |
 
-O índice do sensor de solo não é apresentado como uma medida universal de saturação ou teor volumétrico de água. Seus limiares dependem da calibração do sensor e do substrato. Nesta modelagem, escolhemos BH1750 para expressar luz em lux; usar LDR exigiria outro contrato ou calibração.
+O índice do sensor de solo não é apresentado como uma medida universal de saturação ou teor volumétrico de água. Seus limiares dependem da calibração do sensor e do substrato. O sensor de luminosidade adotado é o BH1750, com leituras em lux. A substituição por LDR exigiria revisão do contrato ou calibração.
 
 ### 3. Exemplos
 
@@ -228,13 +228,13 @@ São utilizados **dispositivo e nuvem**. O ESP32 também exerce o papel de gatew
 | Integrações, notificações, histórico e auditoria | Nuvem |
 | Execução do pulso e desligamento temporizado | Atuador/controlador da bomba, com temporização local |
 
-A temporização local limita um comando já recebido; não constitui uma regra de irrigação por sensores. Por isso não acrescentamos uma camada separada de processamento de borda.
+A temporização local limita um comando já recebido; não constitui uma regra de irrigação por sensores. Essa função é executada pelo controlador do atuador, sem uma camada separada de processamento de borda.
 
 ### 11. Justificativas
 
 **a) Validação preliminar e fila no ESP32 — volume e conectividade.** Comparações simples permitem separar leituras inadequadas antes de enviar telemetria normal, transmitindo diagnóstico resumido. A fila mantém eventos durante interrupções e permite recuperação do histórico. Não há deduplicação de medições físicas diferentes: reenvios preservam o mesmo ID.
 
-**b) Janela, matriz e regra na nuvem — gestão centralizada e integração.** O backend reúne histórico de vários vasos, atualiza parâmetros por espécie e mantém as integrações com aplicativo e serviços externos em um único lugar. Esta é uma escolha de organização e manutenção, não uma impossibilidade de processar a janela no ESP32. A latência de minutos é compatível com a regra modelada, mas a disponibilidade de irrigação depende da rede. Aceitamos essa limitação nesta hipótese inicial; se autonomia offline se tornar requisito, será necessário mover a decisão e o controle para um componente local.
+**b) Janela, matriz e regra na nuvem — gestão centralizada e integração.** O backend reúne histórico de vários vasos, atualiza parâmetros por espécie e mantém as integrações com aplicativo e serviços externos em um único lugar. A centralização simplifica a organização e a manutenção dos parâmetros e das integrações. A latência de minutos é compatível com a regra modelada, mas a disponibilidade de irrigação depende da rede. A arquitetura proposta admite suspensão da irrigação durante indisponibilidade da rede. Um requisito futuro de autonomia offline exigirá decisão e controle em um componente local.
 
 ### 12. Comportamento diante de falhas
 
@@ -290,11 +290,3 @@ flowchart TB
     NOTIF --> APP["Aplicativo"]
     NOTIF --> ALEXA["Integração Alexa"]
 ```
-
----
-
-## Registro da entrega
-
-Este documento reúne contratos e exemplos dos eventos, operações, regra temporal com pseudocódigo, política de atrasos, distribuição justificada, falha escolhida e diagrama. Não é necessário implementar código ou infraestrutura nesta atividade.
-
-Após publicar `atividade-02.md` no repositório do grupo, informar a conclusão na planilha compartilhada e preparar a apresentação de até dois minutos: regra escolhida, local de execução e comportamento durante falha de conexão.
