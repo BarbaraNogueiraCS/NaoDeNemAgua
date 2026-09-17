@@ -1,0 +1,23 @@
+# Caches e ambientes Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Compilação de firmware
+.pio/
+build/
+*.o
+*.elf
+*.bin
+*.uf2
+
+# Pacotes de entrega gerados
+atividade-03/atividade-03-*.zip
+
+# Arquivos temporários
+*.tmp
+*.swp
+*~
+.DS_Store
+Thumbs.db

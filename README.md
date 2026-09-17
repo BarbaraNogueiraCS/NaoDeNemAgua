@@ -22,7 +22,7 @@ A proposta atende cultivadores domésticos que precisam de acompanhamento das co
 
 O projeto está na fase de modelagem e prototipação acadêmica. O repositório contém a análise inicial, a arquitetura de processamento e um protótipo individual de validade temporal de leituras.
 
-O protótipo de Bárbara utiliza um potenciômetro para representar umidade fictícia e LEDs para indicar autorização de irrigação e falha. Sua lógica foi verificada por testes locais em C++, incluindo o sketch com interfaces Arduino substituídas. A compilação para ESP32 e a execução dos testes no Wokwi ainda precisam ser confirmadas.
+O protótipo de Bárbara utiliza um potenciômetro para representar umidade fictícia e LEDs para indicar autorização de irrigação e falha. Sua lógica foi verificada por testes locais em C++, incluindo o sketch com interfaces Arduino substituídas. O protótipo também foi executado no Wokwi pelo navegador, com capturas de estado normal, autorização, expiração e recuperação registradas no relatório.
 
 O sistema completo, as integrações comerciais e a irrigação com hardware real permanecem como etapas de desenvolvimento.
 
@@ -121,7 +121,7 @@ A geração do relatório PDF utiliza Python 3 e ReportLab. O procedimento de mo
 
 ## Próximas etapas
 
-- Concluir a execução e as evidências dos testes individuais no Wokwi.
+- Concluir os protótipos dos demais integrantes e reunir suas evidências individuais.
 - Comparar os protótipos individuais e planejar sua integração.
 - Validar sensores, calibração e acionamento com hardware real.
 - Implementar a comunicação e o backend conforme os requisitos definidos.

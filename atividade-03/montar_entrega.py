@@ -17,6 +17,6 @@ target = base / "atividade-03-barbara-nogueira-202004744.zip"
 with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
     for name in ["sketch.ino", "controle.h", "diagram.json", "relatorio.pdf"]:
         archive.write(folder / name, name)
-    for image in images:
+    for image in sorted((folder / "evidencias").glob("*.png")):
         archive.write(image, "evidencias/" + image.name)
 print(target)

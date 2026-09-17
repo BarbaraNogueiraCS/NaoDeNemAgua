@@ -15,7 +15,7 @@ A divisão está em [divisao-de-responsabilidades.md](divisao-de-responsabilidad
 
 ## Estado de validação
 
-A lógica e o sketch foram compilados e testados localmente com g++, usando interfaces Arduino substituídas no segundo teste. Os logs são identificados como verificações locais. Execução Wokwi, compilação para ESP32, três capturas e link público estão pendentes. O relatório PDF preparatório explicita essas pendências. Não há capturas simuladas ou resultados Wokwi inventados.
+A lógica e o sketch foram testados localmente com g++, usando interfaces Arduino substituídas no teste do firmware. O protótipo de Bárbara foi executado no Wokwi pelo navegador em 17/09/2026. O relatório contém o link e os resultados observados de estado normal, autorização, expiração e recuperação, com capturas reais na pasta `evidencias/`.
 
 ## Verificação local reproduzível
 
