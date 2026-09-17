@@ -60,63 +60,75 @@ Os testes foram realizados com manipulação do potenciômetro e da chave durant
 
 ### 7.1 Estado normal
 
-Estado inicial do cenário: coleta habilitada, entrada fictícia próxima de 60% e autorização desligada.
+Estado inicial: coleta habilitada, entrada fictícia próxima de 60% e autorização desligada.
 
-Sequência aplicada: manter o potenciômetro na posição inicial e permitir novas leituras pela chave à esquerda.
+Sequência aplicada: manter o potenciômetro acima do limiar de 30% e permitir novas leituras pela chave à esquerda.
 
-Resultado esperado: estado NORMAL, informação válida, autorização false e ambos os LEDs de indicação apagados.
+Resultado esperado: NORMAL, valid=true, actuatorAuthorized=false e LEDs de autorização e falha apagados.
 
-Resultado observado: na captura de 17h01min00s, o evento umidade.leitura apresenta eventTimeMs=12000, sequence=25, value=60.02, state=NORMAL, valid=true, actuatorAuthorized=false e ageMs=0. O evento de status seguinte, sequence=26, confirma a mesma condição. Os LEDs de autorização e falha estão apagados; o LED de alimentação da placa não participa dessa indicação.
+Resultado observado: a captura de 17h28min26s mostra leituras de 60,71% em eventTimeMs=950697, sequence=1837; 951697, sequence=1839; 952697, sequence=1841; e 953697, sequence=1843. Todas apresentam NORMAL, valid=true, actuatorAuthorized=false e ageMs=0. Os dois LEDs de indicação estão apagados. A luz de alimentação da placa não representa falha.
 
-Explicação: 60,02% é maior que o limiar de solo seco de 30%. A medição corrente é válida, mas não satisfaz a condição para autorização.
+Explicação: a informação está atual, mas a umidade fictícia acima de 30% não satisfaz a condição de solo seco.
 
 Evidência: evidencias/teste-normal.png. Resultado compatível com o esperado.
 
 ### 7.2 Decisão e resposta observável
 
-Estado inicial de referência: NORMAL com entrada acima do limiar, conforme o teste anterior. A mudança exata do potenciômetro e as primeiras três amostras secas não estão integralmente registradas nas capturas.
+Estado inicial: NORMAL, com valor de 37,05% no status de eventTimeMs=999000, sequence=1934.
 
-Sequência aplicada: ajustar o potenciômetro para aproximadamente 20% e manter a coleta habilitada. A regra implementada exige três amostras secas consecutivas antes de autorizar.
+Sequência aplicada: reduzir o valor do potenciômetro, mantendo a coleta. As três leituras secas consecutivas registradas são:
 
-Resultado esperado: passar por AGUARDANDO e alcançar AUTORIZADO após três amostras secas válidas; verde aceso e vermelho apagado.
+1. eventTimeMs=999697, sequence=1935, value=27.37: AGUARDANDO, autorização false.
+2. eventTimeMs=1000697, sequence=1938, value=25.91: AGUARDANDO, autorização false.
+3. eventTimeMs=1001697, sequence=1940, value=25.23: AUTORIZADO, autorização true.
 
-Resultado observado: na captura de 17h09min19s, uma leitura em eventTimeMs=303816, sequence=601, mostra value=20.73, state=AUTORIZADO, valid=true, actuatorAuthorized=true e ageMs=0. A leitura em 304816 ms, sequence=603, mantém a autorização. O LED verde está aceso e o vermelho apagado. A captura de 17h10min54s também mostra autorização mantida com leituras atuais de 20,73%.
+Resultado esperado: duas amostras em AGUARDANDO, seguidas de AUTORIZADO na terceira; verde aceso e vermelho apagado.
 
-Explicação: o índice fictício está abaixo de 30%, com dados válidos. A saída observável representa autorização lógica, sem bombeamento real. A persistência de três amostras é definida no código; a captura comprova o estado autorizado, mas não registra isoladamente cada amostra que levou à primeira autorização.
+Resultado observado: a captura de 17h31min37s mostra a sequência completa, todas as leituras válidas e com ageMs=0. Em 1001697 ms, o log registra state=AUTORIZADO e authorization=ON, e o verde está aceso. A captura de 17h32min02s mostra a manutenção de AUTORIZADO, inclusive com uma nova leitura de 21,90% em 1002697 ms, sequence=1943.
 
-Evidência: evidencias/teste-decisao.png. A resposta final está compatível com o esperado. A etapa AGUARDANDO também é observada no teste de recuperação descrito abaixo.
+Explicação: os três valores estão abaixo de 30%. Há 1000 ms entre amostras e 2000 ms entre a primeira e a terceira. O programa confirma a condição antes de autorizar a resposta por LED. Não há bombeamento real.
+
+Evidências: evidencias/teste-decisao.png e evidencias/decisao-autorizada.png. Resultado compatível com o esperado.
 
 ### 7.3 Teste adversarial individual — matrícula final 4
 
 Situação obrigatória: informação que continua armazenada depois de perder a validade.
 
-Estado inicial: AUTORIZADO, valor de 20,73% e coleta inicialmente ativa.
+Estado inicial: AUTORIZADO com valor retido de 21,90% e leitura ainda válida.
 
-Sequência aplicada: interromper novas amostras pela chave, sem alterar a entrada fictícia, e acompanhar a idade do último dado. A captura de 17h09min48s mostra o estado autorizado ainda preservado durante a tolerância temporal.
+Sequência aplicada: interromper novas amostras pela chave, manter o valor do potenciômetro e acompanhar ageMs até a expiração.
 
-Resultado esperado: manter o valor na memória, mas retirar a autorização ao completar 5000 ms desde a última amostra válida, sinalizando DADO_OBSOLETO e acendendo o vermelho.
+Resultado esperado: preservar o último valor na memória, mas retirar a autorização quando sua idade atingir 5000 ms, com DADO_OBSOLETO e LED vermelho aceso.
 
-Resultado observado: em eventTimeMs=323000, sequence=636, o status mostra value=20.73, state=AUTORIZADO, valid=true, actuatorAuthorized=true e ageMs=4184. Em eventTimeMs=323816, sequence=637, aparece estado.alterado com state=DADO_OBSOLETO, valid=false, actuatorAuthorized=false e ageMs=5000. A linha de diagnóstico registra reason=validade_expirada e authorization=OFF. O valor permanece 20,73%. No status de 324000 ms, sequence=638, a idade é 5184 ms e o bloqueio permanece. A imagem mostra verde apagado e vermelho aceso.
+Resultado observado: a captura de 17h34min28s registra AUTORIZADO em 1149000 ms, sequence=2235, ageMs=1303; 1150000 ms, sequence=2236, ageMs=2303; 1151000 ms, sequence=2237, ageMs=3303; e 1152000 ms, sequence=2238, ageMs=4303. Em todos esses status, value=21.90, valid=true e actuatorAuthorized=true.
 
-Pelo par tempo/idade, o instante da última leitura válida pode ser deduzido como 318816 ms: 323816 − 5000. A captura anterior contém uma leitura nesse instante. Portanto, a expiração registrada é consistente com o limite configurado de cinco segundos.
+Em eventTimeMs=1152697, sequence=2239, o evento estado.alterado mostra DADO_OBSOLETO, value=21.90, valid=false, actuatorAuthorized=false e ageMs=5000. O log indica reason=validade_expirada e authorization=OFF. A captura de 17h34min37s confirma o verde apagado, o vermelho aceso e a manutenção do bloqueio em status posteriores, com idades de 5303 até 11303 ms.
 
-Explicação: uma implementação ingênua poderia continuar usando 20,73% como condição presente indefinidamente. O protótipo separa o valor armazenado da sua validade: a verificação temporal roda mesmo sem novas amostras, expira o estado e bloqueia a resposta.
+O instante da última leitura válida é deduzido pelo par tempo/idade: 1152697 − 5000 = 1147697 ms. O cálculo é consistente com os status anteriores. Esse instante é uma inferência a partir dos campos visíveis, não uma leitura transcrita das capturas.
 
-Evidências: evidencias/teste-adversarial.png e evidencias/adversarial-antes-expiracao.png. Resultado compatível com o esperado.
+Explicação: uma implementação ingênua continuaria usando 21,90% como informação presente mesmo com a coleta interrompida. O protótipo verifica o tempo independentemente de novas amostras, preserva o valor para diagnóstico e bloqueia a autorização ao vencer sua validade.
+
+Evidências: evidencias/adversarial-antes-expiracao.png e evidencias/teste-adversarial.png. A primeira captura contém tanto os status anteriores quanto a transição; seu circuito já mostra o estado obsoleto atual. Resultado compatível com o esperado.
 
 ### 7.4 Recuperação após obsolescência
 
-Estado inicial: DADO_OBSOLETO com o valor antigo de 20,73% retido.
+Estado inicial: DADO_OBSOLETO com valor de 21,90% retido; o status em 1187000 ms, sequence=2274, mostra ageMs=39303 e autorização false.
 
-Sequência aplicada: reabilitar a coleta mantendo a entrada próxima de 20%.
+Sequência aplicada: reabilitar a coleta mantendo o potenciômetro na posição de 21,90%.
 
-Resultado esperado: reiniciar a contagem de amostras, passar por AGUARDANDO e retornar a AUTORIZADO após três novas amostras secas consecutivas.
+Resultado esperado: reiniciar a contagem e autorizar somente após três novas amostras secas válidas.
 
-Resultado observado: a captura de 17h12min19s contém status obsoleto em 403000 ms, seguido de umidade.leitura em 403830 ms, sequence=745, com value=20.73, state=AGUARDANDO, valid=true, actuatorAuthorized=false e ageMs=0. A leitura em 404830 ms, sequence=748, ainda registra AGUARDANDO. A captura de 17h12min25s mostra leituras em 409830, 410830 e 411830 ms com AUTORIZADO e LED verde aceso.
+Resultado observado: as capturas de 17h35min42s e 17h35min55s mostram:
 
-A janela do monitor serial na captura de recuperação exibe mensagens anteriores ao estado atual dos LEDs. Por isso, a análise temporal usa os instantes de cada evento. O momento exato da terceira amostra de recuperação não está visível; as imagens comprovam a passagem por AGUARDANDO e o posterior retorno a AUTORIZADO.
+1. eventTimeMs=1187998, sequence=2275: value=21.90, AGUARDANDO, valid=true, autorização false e ageMs=0.
+2. eventTimeMs=1188998, sequence=2278: value=21.90, AGUARDANDO, valid=true, autorização false e ageMs=0.
+3. eventTimeMs=1189998, sequence=2280: value=21.90, AUTORIZADO, valid=true, autorização true e ageMs=0.
 
-Evidências: evidencias/teste-recuperacao.png e evidencias/recuperacao-autorizada.png. As etapas visíveis são compatíveis com a regra.
+O log em 1189998 ms confirma authorization=ON. O LED verde está aceso e o vermelho apagado. A sequência comprova que a contagem anterior não é reaproveitada depois da expiração: são necessárias três novas amostras em intervalos de 1000 ms.
+
+As mensagens mostradas no monitor foram preservadas enquanto a execução avançava. Portanto, o circuito exibe o estado atual, e a evolução anterior deve ser interpretada pelos instantes dos eventos. A captura de 17h35min55s registra integralmente a sequência até a reautorização.
+
+Evidências: evidencias/teste-recuperacao.png e evidencias/recuperacao-autorizada.png. Resultado compatível com o esperado.
 
 ### 7.5 Qualidade e limites da evidência
 
@@ -142,7 +154,7 @@ Sugestões adotadas: entrada substituta declarada, chave para interromper amostr
 
 Erro identificado e corrigido: a primeira versão do circuito utilizava nomes numéricos para quatro terminais da placa, omitindo o prefixo D exigido pelo componente ESP32 DevKit v1 no Wokwi. Foram corrigidos para D34, D23, D18 e D19. Os números de GPIO no programa permaneceram 34, 23, 18 e 19.
 
-Limitação identificada: os testes locais não validam a execução Wokwi; resultados de simulação foram documentados separadamente com capturas reais. As imagens não contêm o histórico completo de todas as transições. A estudante permanece responsável por compreender, revisar e explicar o material entregue.
+Limitação identificada: os testes locais não validam a execução Wokwi; resultados de simulação foram documentados separadamente com capturas reais. As capturas registram os cenários selecionados, incluindo as três amostras até a autorização, a expiração e as três amostras de recuperação; não constituem um log completo de toda a sessão. A estudante permanece responsável por compreender, revisar e explicar o material entregue.
 
 ## 11. Link compartilhável e conclusão
 

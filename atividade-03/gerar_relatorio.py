@@ -24,12 +24,13 @@ for block in (base / "relatorio.md").read_text().split("\n\n"):
     story.append(Paragraph(escape(text).replace("\n", "<br/>"), styles[style]))
     story.append(Spacer(1, 8))
 capturas = [
-    ("teste-normal.png", "Estado normal: leitura de 60,02%, dados válidos e autorização desligada."),
-    ("teste-decisao.png", "Decisão: leitura de 20,73%, AUTORIZADO e LED verde aceso."),
-    ("adversarial-antes-expiracao.png", "Adversarial: último valor retido, com autorização ainda válida antes de expirar."),
-    ("teste-adversarial.png", "Adversarial: transição em ageMs=5000 para DADO_OBSOLETO e bloqueio da autorização."),
-    ("teste-recuperacao.png", "Recuperação: primeiras novas amostras em AGUARDANDO. O monitor mostra registros anteriores ao estado atual dos LEDs."),
-    ("recuperacao-autorizada.png", "Recuperação: novas leituras válidas e retorno a AUTORIZADO."),
+    ("teste-normal.png", "Estado normal: leitura de 60,71%, informação válida e autorização desligada."),
+    ("teste-decisao.png", "Decisão: três leituras secas, 27,37%, 25,91% e 25,23%, até AUTORIZADO."),
+    ("decisao-autorizada.png", "Decisão: manutenção da autorização com novas leituras válidas, incluindo 21,90%."),
+    ("adversarial-antes-expiracao.png", "Adversarial: status anteriores e transição para DADO_OBSOLETO em ageMs=5000. O circuito mostra o estado atual após expirar."),
+    ("teste-adversarial.png", "Adversarial: valor de 21,90% preservado, autorização bloqueada e LED vermelho aceso."),
+    ("teste-recuperacao.png", "Recuperação: primeiras novas leituras em AGUARDANDO; o circuito mostra o estado posterior."),
+    ("recuperacao-autorizada.png", "Recuperação: sequência completa de três novas leituras até AUTORIZADO."),
 ]
 for filename, caption in capturas:
     image_path = base / "evidencias" / filename
